@@ -2,8 +2,11 @@ import sys, os, datetime
 import numpy as np
 import argparse
 
-from keras import models, layers, backend
 import keras
+from keras import models, layers, backend
+
+import keras_nn
+
 
 def load_data():
     # load data
@@ -33,6 +36,8 @@ def load_data():
     Ytest = keras.utils.to_categorical(Ytest, num_classes)
     
     return [Xtrain,Ytrain,Xtest,Ytest,input_shape,num_classes]
+
+
     
 def LeNet(input_shape, num_classes):
     
@@ -81,17 +86,20 @@ def loadmodel():
 ### main ###
 if __name__ == "__main__":
 
+    problem = 'lenet_mnist'
+
     parser = argparse.ArgumentParser(description='Keras LeNet example')
     parser.add_argument('-seed', type=int, help='random seed', default=0)
     args = parser.parse_args()
 
     [Xtrain,Ytrain,Xtest,Ytest,input_shape,num_classes] = load_data()
     
-    model = loadmodel()
+    # Load or create model
+    model = keras_nn.loadmodel(problem)
     if model==None:
         model = LeNet(input_shape, num_classes)
     
-    
+    # Set random seed
     if args.seed==0:
         dt = datetime.datetime.now()
         rs = int(dt.strftime("%y%m%d%H%M"))
@@ -103,8 +111,9 @@ if __name__ == "__main__":
     
     print("\nTraining ...")
     
+     # Train
     try:
-        model.fit(Xtrain, Ytrain, batch_size=32, epochs=10)
+        model.fit(Xtrain, Ytrain, batch_size=32, epochs=100)
     except KeyboardInterrupt:
         pass
 
@@ -117,4 +126,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
 
-    savemodel(model)
+    # Save the model
+    keras_nn.savemodel(model,problem)
+

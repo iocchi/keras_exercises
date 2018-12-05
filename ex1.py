@@ -21,7 +21,7 @@ def loaddataset(dsname, outputsize=1):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Keras/TF ANN examples')
-    parser.add_argument('problem', type=str, help='problem (e.g., xor, nl6, noisyxor, binaryid)')
+    parser.add_argument('problem', type=str, help='problem (xor, nl6, noisyxor, binaryid)')
     parser.add_argument('-hidden', type=int, help='hidden units', default=-1)
     parser.add_argument('-model', type=str, help='model filename', default='')
     parser.add_argument('-seed', type=int, help='random seed', default=0)
@@ -74,3 +74,5 @@ if __name__ == "__main__":
     fnmodel = "%s_%d_%d_%03d" %(args.problem,rs,int(acc*100),int(loss*1000))
     print_solution(model,X)    
     savemodel(model,fnmodel)
+
+

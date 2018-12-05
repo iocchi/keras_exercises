@@ -91,7 +91,7 @@ def loadmodel(problem):
     try:
         model = load_model(filename)
         print("\nModel loaded successfully from file %s\n" %filename)
-    except:    
+    except OSError:    
         print("\nModel file %s not found!!!\n" %filename)
         model = None
     return model
@@ -194,3 +194,4 @@ def print_solution(model,X):
         print("    x = %s -> h = %s -> y: %s"  %(strx,h,stry))
     
     print('----\n')
+

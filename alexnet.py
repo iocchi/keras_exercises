@@ -7,9 +7,12 @@ from keras.layers import Dense, Activation, Dropout, Flatten,\
 from keras.layers.normalization import BatchNormalization
 import numpy as np
 
-np.random.seed(20181205)
+
 
 import tflearn.datasets.oxflower17 as oxflower17
+
+import keras_nn
+
 
 def load_data():
     Xtrain, Ytrain = oxflower17.load_data(one_hot=True)
@@ -25,22 +28,6 @@ def load_data():
 
     return [Xtrain,Ytrain,input_shape,num_classes] 
 
-
-filename = 'alexnet_oxflower17.h5'
-
-def savemodel(model):  
-    model.save(filename)
-    print("\nModel saved successfully on file %s\n" %filename)
-
-
-def loadmodel():
-    try:
-        model = load_model(filename)
-        print("\nModel loaded successfully from file %s\n" %filename)
-    except OSError:
-        print("\nModel file %s not found!!!\n" %filename)
-        model = None
-    return model
 
 
 def AlexNet(input_shape, num_classes):
@@ -128,20 +115,25 @@ def AlexNet(input_shape, num_classes):
 ### main ###
 if __name__ == "__main__":
 
+    problem = 'alexnet_oxflower17'
+
+    #np.random.seed(20181205)
+
     # Get Data
     [Xtrain,Ytrain,input_shape,num_classes] = load_data()
     
     # Load or create model
-    model = loadmodel()
+    model = keras_nn.loadmodel(problem)
     if model==None:
         model = AlexNet(input_shape, num_classes)
 
     # Train
     try:
-        model.fit(Xtrain, Ytrain, batch_size=64, epochs=1, verbose=1, \
+        model.fit(Xtrain, Ytrain, batch_size=64, epochs=100, verbose=1, \
         validation_split=0.2, shuffle=True)
     except KeyboardInterrupt:
         pass
       
     # Save the model
-    savemodel(model)
+    keras_nn.savemodel(model,problem)
+
