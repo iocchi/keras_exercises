@@ -1,15 +1,25 @@
 # Keras exercises
 
-Keras/Tensorflow examples and exercises for Machine Learning courses
+Keras/Tensorflow examples and exercises for Machine Learning courses.
 
 Requires 
-    Python3
-    Tensorflow - https://www.tensorflow.org/
-    Keras - https://keras.io/
-    TFLearn - http://tflearn.org/
+    - Python3
+    - Tensorflow - https://www.tensorflow.org/
+    - Keras - https://keras.io/
+    - TFLearn - http://tflearn.org/
     
+Network implemented:
+    - simple 2 layers networks
+    - LeNet
+    - ALexNet
 
 
+Problems/datasets:
+    - XOR (and other non-linearly separable examples)
+    - Binary identity function
+    - MNIST
+    - Oxford flower17
+    
 
 ## Exercise 1
 

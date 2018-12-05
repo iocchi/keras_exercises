@@ -1,4 +1,4 @@
-# https://www.learnopencv.com/understanding-alexnet/
+
 
 import keras
 from keras.models import Sequential, load_model
@@ -31,10 +31,11 @@ def load_data():
 
 
 def AlexNet(input_shape, num_classes):
-    # (3) Create a sequential model
+    # Some details in https://www.learnopencv.com/understanding-alexnet/
+
     model = Sequential()
 
-    # 1st Convolutional Layer 
+    # C1 Convolutional Layer 
     model.add(Conv2D(filters=96, input_shape=input_shape, kernel_size=(11,11),\
      strides=(4,4), padding='valid'))
     model.add(Activation('relu'))
@@ -43,7 +44,7 @@ def AlexNet(input_shape, num_classes):
     # Batch Normalisation before passing it to the next layer
     model.add(BatchNormalization())
 
-    # 2nd Convolutional Layer
+    # C2 Convolutional Layer
     model.add(Conv2D(filters=256, kernel_size=(11,11), strides=(1,1), padding='valid'))
     model.add(Activation('relu'))
     # Pooling
@@ -51,19 +52,19 @@ def AlexNet(input_shape, num_classes):
     # Batch Normalisation
     model.add(BatchNormalization())
 
-    # 3rd Convolutional Layer
+    # C3 Convolutional Layer
     model.add(Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), padding='valid'))
     model.add(Activation('relu'))
     # Batch Normalisation
     model.add(BatchNormalization())
 
-    # 4th Convolutional Layer
+    # C4 Convolutional Layer
     model.add(Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), padding='valid'))
     model.add(Activation('relu'))
     # Batch Normalisation
     model.add(BatchNormalization())
 
-    # 5th Convolutional Layer
+    # C5 Convolutional Layer
     model.add(Conv2D(filters=256, kernel_size=(3,3), strides=(1,1), padding='valid'))
     model.add(Activation('relu'))
     # Pooling
@@ -71,9 +72,9 @@ def AlexNet(input_shape, num_classes):
     # Batch Normalisation
     model.add(BatchNormalization())
 
-    # Passing it to a dense layer
     model.add(Flatten())
-    # 1st Dense Layer
+
+    # D1 Dense Layer
     model.add(Dense(4096, input_shape=(224*224*3,)))
     model.add(Activation('relu'))
     # Add Dropout to prevent overfitting
@@ -81,7 +82,7 @@ def AlexNet(input_shape, num_classes):
     # Batch Normalisation
     model.add(BatchNormalization())
 
-    # 2nd Dense Layer
+    # D2 Dense Layer
     model.add(Dense(4096))
     model.add(Activation('relu'))
     # Add Dropout
@@ -89,7 +90,7 @@ def AlexNet(input_shape, num_classes):
     # Batch Normalisation
     model.add(BatchNormalization())
 
-    # 3rd Dense Layer
+    # D3 Dense Layer
     model.add(Dense(1000))
     model.add(Activation('relu'))
     # Add Dropout
@@ -101,11 +102,11 @@ def AlexNet(input_shape, num_classes):
     model.add(Dense(num_classes))
     model.add(Activation('softmax'))
 
+    # Summary
     model.summary()
 
-    # (4) Compile
-    model.compile(loss='categorical_crossentropy', optimizer='adam',\
-    metrics=['accuracy'])
+    # Compile
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     return model
  
