@@ -23,6 +23,7 @@ def createmodel(ninput,noutput,nhidden,lrate=1e-3):
     sgd = SGD(lr=lrate)
     model.compile(loss=lossfn, optimizer=sgd, metrics=['accuracy'])
     print("Created new model i:%d h:%d o:%d" %(ninput,nhidden,noutput))
+    model.summary()
     return model
 
 def train(model,X,Y,niter=-1):

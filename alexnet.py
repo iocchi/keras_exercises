@@ -1,18 +1,15 @@
-
+import os
+import numpy as np
 
 import keras
-from keras.models import Sequential, load_model
+from keras import models, layers, backend
 from keras.layers import Dense, Activation, Dropout, Flatten,\
  Conv2D, MaxPooling2D
 from keras.layers.normalization import BatchNormalization
-import numpy as np
-
-
 
 import tflearn.datasets.oxflower17 as oxflower17
 
-import keras_nn
-
+models_dir = 'models'
 
 def load_data():
     Xtrain, Ytrain = oxflower17.load_data(one_hot=True)
@@ -72,12 +69,13 @@ def AlexNet(input_shape, num_classes):
     # Batch Normalisation
     model.add(BatchNormalization())
 
+    # Flatten
     model.add(Flatten())
 
     # D1 Dense Layer
     model.add(Dense(4096, input_shape=(224*224*3,)))
     model.add(Activation('relu'))
-    # Add Dropout to prevent overfitting
+    # Dropout
     model.add(Dropout(0.4))
     # Batch Normalisation
     model.add(BatchNormalization())
@@ -85,7 +83,7 @@ def AlexNet(input_shape, num_classes):
     # D2 Dense Layer
     model.add(Dense(4096))
     model.add(Activation('relu'))
-    # Add Dropout
+    # Dropout
     model.add(Dropout(0.4))
     # Batch Normalisation
     model.add(BatchNormalization())
@@ -93,7 +91,7 @@ def AlexNet(input_shape, num_classes):
     # D3 Dense Layer
     model.add(Dense(1000))
     model.add(Activation('relu'))
-    # Add Dropout
+    # Dropout
     model.add(Dropout(0.4))
     # Batch Normalisation
     model.add(BatchNormalization())
@@ -102,16 +100,37 @@ def AlexNet(input_shape, num_classes):
     model.add(Dense(num_classes))
     model.add(Activation('softmax'))
 
-    # Summary
-    model.summary()
-
     # Compile
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     return model
  
 
+def savemodel(model,problem):
+    if problem.endswith('.h5'):
+        filename = problem
+    else:
+        filename = os.path.join(models_dir, '%s.h5' %problem)
+    model.save(filename)
+    #W = model.get_weights()
+    #print(W)
+    #np.savez(filename, weights = W)
+    print("\nModel saved successfully on file %s\n" %filename)
+
     
+def loadmodel(problem):
+    if problem.endswith('.h5'):
+        filename = problem
+    else:
+        filename = os.path.join(models_dir, '%s.h5' %problem)
+    try:
+        model = models.load_model(filename)
+        print("\nModel loaded successfully from file %s\n" %filename)
+    except OSError:    
+        print("\nModel file %s not found!!!\n" %filename)
+        model = None
+    return model
+  
 
 ### main ###
 if __name__ == "__main__":
@@ -124,9 +143,12 @@ if __name__ == "__main__":
     [Xtrain,Ytrain,input_shape,num_classes] = load_data()
     
     # Load or create model
-    model = keras_nn.loadmodel(problem)
+    model = loadmodel(problem)
     if model==None:
         model = AlexNet(input_shape, num_classes)
+
+    # Summary
+    model.summary()
 
     # Train
     try:
@@ -136,5 +158,5 @@ if __name__ == "__main__":
         pass
       
     # Save the model
-    keras_nn.savemodel(model,problem)
+    savemodel(model,problem)
 

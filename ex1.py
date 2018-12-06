@@ -57,6 +57,8 @@ if __name__ == "__main__":
             rs = args.seed
 
     np.random.seed(rs)
+    print("random seed: %d" %rs)
+
     if model==None:
         if (args.lrate>0):
             model = createmodel(ninput,noutput,nhidden,args.lrate)
@@ -68,8 +70,9 @@ if __name__ == "__main__":
         backend.set_value(model.optimizer.lr, args.lrate)
         print("New learning rate: %f" %backend.get_value(model.optimizer.lr))
 
+    if args.niter==0:
+        model.summary()
 
-    print("random seed: %d" %rs)
     [acc, loss, run] = train(model,X,Y,niter=args.niter)
     fnmodel = "%s_%d_%d_%03d" %(args.problem,rs,int(acc*100),int(loss*1000))
     print_solution(model,X)    

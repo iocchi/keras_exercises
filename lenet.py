@@ -4,9 +4,10 @@ import argparse
 
 import keras
 from keras import models, layers, backend
+from keras.layers import Dense, Activation, Dropout, Flatten,\
+    Conv2D, MaxPooling2D, AveragePooling2D
 
-import keras_nn
-
+models_dir = 'models'
 
 def load_data():
     # load data
@@ -44,40 +45,50 @@ def LeNet(input_shape, num_classes):
     print('\nLeNet model')
     model = models.Sequential()
     
-    
-    print('\tC1: Convolutional, 6 kernels 5x5')
-    model.add(layers.Conv2D(6, kernel_size=(5, 5), strides=(1, 1), activation='tanh', input_shape=input_shape, padding="same"))
-    print('\tS2: Average Pooling, 2x2')
-    model.add(layers.AveragePooling2D(pool_size=(2, 2), strides=(1, 1), padding='valid'))
-    print('\tC3: Convolutional, 16 kernels 5x5')
-    model.add(layers.Conv2D(16, kernel_size=(5, 5), strides=(1, 1), activation='tanh', padding='valid'))
-    print('\tS4: Average Pooling, 2x2')
-    model.add(layers.AveragePooling2D(pool_size=(2, 2), strides=(2, 2), padding='valid'))
-    print('\tC5: Convolutional, 120 kernels 5x5')
-    model.add(layers.Conv2D(120, kernel_size=(5, 5), strides=(1, 1), activation='tanh', padding='valid'))
-    model.add(layers.Flatten())
+    print('\tC1: Convolutional 6 kernels 5x5')
+    model.add(Conv2D(6, kernel_size=(5, 5), strides=(1, 1), activation='tanh', input_shape=input_shape, padding="same"))
+    print('\tS2: Average Pooling 2x2 stride 2x2')
+    model.add(AveragePooling2D(pool_size=(2, 2), strides=(2, 2), padding='valid'))
+    print('\tC3: Convolutional 16 kernels 5x5')
+    model.add(Conv2D(16, kernel_size=(5, 5), strides=(1, 1), activation='tanh', padding='valid'))
+    print('\tS4: Average Pooling 2x2 stride 2x2')
+    model.add(AveragePooling2D(pool_size=(2, 2), strides=(2, 2), padding='valid'))
+    print('\tC5: Convolutional 120 kernels 5x5')
+    model.add(Conv2D(120, kernel_size=(5, 5), strides=(1, 1), activation='tanh', padding='valid'))
+    model.add(Flatten())
     print('\tF6: Fully connected, 84 units')
-    model.add(layers.Dense(84, activation='tanh'))
+    model.add(Dense(84, activation='tanh'))
     print('\tF7: Fully connected, 10 units')
-    model.add(layers.Dense(num_classes, activation='softmax'))
+    model.add(Dense(num_classes, activation='softmax'))
 
-    optimizer = 'adam' #'SGD'
+    optimizer = 'adam' #alternative 'SGD'
     model.compile(loss=keras.losses.categorical_crossentropy, optimizer=optimizer, metrics=['accuracy'])
     
     return model
         
-filename = 'lenet_mnist.h5'
 
-def savemodel(model):  
+
+def savemodel(model,problem):
+    if problem.endswith('.h5'):
+        filename = problem
+    else:
+        filename = os.path.join(models_dir, '%s.h5' %problem)
     model.save(filename)
+    #W = model.get_weights()
+    #print(W)
+    #np.savez(filename, weights = W)
     print("\nModel saved successfully on file %s\n" %filename)
 
-
-def loadmodel():
+    
+def loadmodel(problem):
+    if problem.endswith('.h5'):
+        filename = problem
+    else:
+        filename = os.path.join(models_dir, '%s.h5' %problem)
     try:
         model = models.load_model(filename)
         print("\nModel loaded successfully from file %s\n" %filename)
-    except:
+    except OSError:    
         print("\nModel file %s not found!!!\n" %filename)
         model = None
     return model
@@ -95,9 +106,10 @@ if __name__ == "__main__":
     [Xtrain,Ytrain,Xtest,Ytest,input_shape,num_classes] = load_data()
     
     # Load or create model
-    model = keras_nn.loadmodel(problem)
+    model = loadmodel(problem)
     if model==None:
         model = LeNet(input_shape, num_classes)
+    model.summary()
     
     # Set random seed
     if args.seed==0:
@@ -127,5 +139,5 @@ if __name__ == "__main__":
         pass
 
     # Save the model
-    keras_nn.savemodel(model,problem)
+    savemodel(model,problem)
 
