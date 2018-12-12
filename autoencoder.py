@@ -241,3 +241,5 @@ if __name__ == "__main__":
         print("Accuracy K-means AE: %.2f" %acc)
     except KeyboardInterrupt:
         pass
+
+

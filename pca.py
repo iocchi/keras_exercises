@@ -164,7 +164,6 @@ if __name__ == "__main__":
     print("\nPCA Training ...")
     pca.fit(Xtrain)
     
-    pca.fit(Xtrain)
     #means = pca.means_   #put this into a .npy file
     #components = pca.components_
     
@@ -209,88 +208,6 @@ if __name__ == "__main__":
     sys.exit(0)
     
     
-    doplainkmeans = False
-
-    #
-    # Plain K-means 
-    #
-
-    if (doplainkmeans):
-        problem = 'kmeans'
-        filename = filename = os.path.join(models_dir, '%s.pkl' %problem)
-        # Load or create model
-        kmeans = loadskmodel(problem)
-        if kmeans==None:
-            # K-means Model
-            kmeans = KMeans(n_clusters=num_classes, n_init=1, n_jobs=2, verbose=0)
-
-            print("\nK-means Training ...")
-            # Train
-            try:
-                kmeans.fit(Xtrain)
-            except KeyboardInterrupt:
-                pass
-
-            #joblib.dump(keras, filename, compress=9)
-                
-        print("\n\nEvaluation ...")
-        # Evaluate the K-Means clustering accuracy
-        y_pred_kmeans = kmeans.predict(Xtrain)
-        
-        acc = evaluation(Ytrain, y_pred_kmeans)
-        print("Accuracy K-means: %.2f" %acc)
-    else:
-        # 0.53 - 0.56
-        acc = 0.53
-        print("Accuracy K-means: %.2f" %acc)
 
 
-    #
-    # K-means with autoencoded features
-    #
-    
-    problem = 'kmeans_ae'
-    # Load or create model
-    autoencoder = loadmodel(problem)
-    if autoencoder==None:
-        dims = [Xtrain.shape[-1], 500, 500, 2000, 10]
-        init = VarianceScaling(scale=1. / 3., mode='fan_in', distribution='uniform')
-        autoencoder = AutoEncoder(dims, init=init)
-    
-    print('\nAutoEncoder')
-    autoencoder.summary()
-    
-    print("\nAutoencoder Training ...")
-    # Train
-    try:
-        epochs = 300
-        batch_size = 256
-        autoencoder.fit(Xtrain, Xtrain, batch_size=batch_size, epochs=epochs)
-    except KeyboardInterrupt:
-        pass
 
-    savemodel(autoencoder, problem)
-
-    # define encoder model
-    encoder = Model(inputs=autoencoder.input, outputs=autoencoder.get_layer('encoder_3').output)
-
-    print('\nEncoder')
-    encoder.summary()
-
-    try:
-
-        print('\nFeature extraction')
-        features_ae = encoder.predict(Xtrain)
-        
-        # K-means Model
-        kmeans_ae = KMeans(n_clusters=num_classes, n_init=1, n_jobs=2, verbose=0)
-    
-        print('\nK-means AE training')
-        kmeans_ae.fit(features_ae)
-
-        print('\nK-means AE evaluation')
-        y_pred_kmeans = kmeans_ae.predict(features_ae)
-        acc = evaluation(Ytrain, y_pred_kmeans)
-        print("Accuracy K-means AE: %.2f" %acc)
-    except KeyboardInterrupt:
-        pass
