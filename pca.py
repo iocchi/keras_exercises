@@ -7,7 +7,7 @@ import argparse
 from sklearn.cluster import KMeans
 from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score, classification_report
 from sklearn.externals import joblib
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, IncrementalPCA
 from sklearn import svm
 
 import keras
@@ -137,11 +137,30 @@ def loadskmodel(problem):
         model = None
     return model
 
+def savepcamodel(pca, filename):
+    np.savez(filename, pcamean = pca.mean_, pcacomponents = pca.components_)
+    print("PCA model saved successfully on file %s\n\n\n" %filename)
+
     
+def loadpcamodel(pca, filename):
+    try:
+        filename = filename + '.npz'
+        data = np.load(filename)
+        pca.mean_ = data['pcamean']
+        pca.components_ = data['pcacomponents']
+    except IOError:
+        s = "Error: cannot load data from " + filename
+        print(s)
+        return False
+
+    s = "Data loaded from " + filename
+    print(s)    
+    return True
+
 ### main ###
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Keras LeNet example')
+    parser = argparse.ArgumentParser(description='PCA example')
     parser.add_argument('-seed', type=int, help='random seed', default=0)
     args = parser.parse_args()
 
@@ -159,14 +178,18 @@ if __name__ == "__main__":
     print("\nRandom seed %d" %rs)
     
     # PCA model
-    pca = PCA(n_components=100)
+    n_components=100
+    pca = IncrementalPCA(n_components=n_components)
+
+    print("\nPCA with %d components ..." %n_components)
+    filename = os.path.join(models_dir, 'mnist_%03d.pca' %n_components)
+
+    if not loadpcamodel(pca,filename):
+        print("\nPCA Training ...")
+        pca.fit(Xtrain)
+        savepcamodel(pca, filename)
     
-    print("\nPCA Training ...")
-    pca.fit(Xtrain)
-    
-    #means = pca.means_   #put this into a .npy file
-    #components = pca.components_
-    
+    print("\nPCA Tranform ...")
     Xpca = pca.transform(Xtrain)
 
     if False:
@@ -176,7 +199,7 @@ if __name__ == "__main__":
         Xpca = fast_dot(td, components.T)
 
     if False:
-        kmeans = KMeans(n_clusters=num_classes, n_init=1, n_jobs=2, verbose=0)
+        kmeans = KMeans(init='k-means++', n_clusters=num_classes, n_init=10, n_jobs=2, verbose=0)
 
         print("\nK-means Training ...")
         # Train
@@ -190,21 +213,29 @@ if __name__ == "__main__":
         y_pred_kmeans = kmeans.predict(Xpca)
         
         acc = evaluation(Ytrain, y_pred_kmeans)
-        print("Accuracy K-means PCA: %.2f" %acc) # 0.53
+        print("Accuracy K-means PCA: %.2f" %acc) 
+        # k-means default params 
+        #   100 components 0.59, 300 comp 0.51, 50 comp 0.54
+        # init='k-means++', n_init=10
+        #   50 components 0.51, 10 comp. 0.50
 
+    if True:
     
-    
-    #clf = svm.LinearSVC()
-    clf = svm.SVC(gamma='scale')
-     
-    clf.fit(Xpca,Ytrain)
-    
-    Xtestpca = pca.fit_transform(Xtest)
-    ysvm = clf.predict(Xtestpca)
-    
-    rep = classification_report(Ytest, ysvm)
-    print(rep)
-    
+        print('\nSVM training ...')
+        
+        #clf = svm.LinearSVC()
+        clf = svm.SVC(gamma='scale')
+         
+        clf.fit(Xpca,Ytrain)
+        
+        Xtestpca = pca.transform(Xtest)
+        ysvm = clf.predict(Xtestpca)
+       
+        rep = classification_report(Ytest, ysvm)
+        print(rep)  
+        # RBF 10 comp. f1 0.94, 50 components: f1 0.98, 100 comp. 0.98
+        # Linear 10 comp. f1 0.77, 50 components: f1  0.90  , 100 comp. 0.91
+
     sys.exit(0)
     
     

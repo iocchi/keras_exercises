@@ -230,7 +230,7 @@ if __name__ == "__main__":
         features_ae = encoder.predict(Xtrain)
         
         # K-means Model
-        kmeans_ae = KMeans(n_clusters=num_classes, n_init=1, n_jobs=2, verbose=0)
+        kmeans_ae = KMeans(init='k-means++', n_clusters=num_classes, n_init=10, n_jobs=2, verbose=0)
     
         print('\nK-means AE training')
         kmeans_ae.fit(features_ae)
