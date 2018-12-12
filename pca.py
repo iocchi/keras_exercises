@@ -5,8 +5,10 @@ import numpy as np
 import argparse
 
 from sklearn.cluster import KMeans
-from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score
+from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score, classification_report
 from sklearn.externals import joblib
+from sklearn.decomposition import PCA
+from sklearn import svm
 
 import keras
 from keras import models, layers, backend
@@ -155,6 +157,57 @@ if __name__ == "__main__":
     np.random.seed(rs)
     
     print("\nRandom seed %d" %rs)
+    
+    # PCA model
+    pca = PCA(n_components=100)
+    
+    print("\nPCA Training ...")
+    pca.fit(Xtrain)
+    
+    pca.fit(Xtrain)
+    #means = pca.means_   #put this into a .npy file
+    #components = pca.components_
+    
+    Xpca = pca.transform(Xtrain)
+
+    if False:
+        # equivalent to  pca.transform(Xtrain)
+        from sklearn.utils.extmath import fast_dot
+        td = Xtrain - means
+        Xpca = fast_dot(td, components.T)
+
+    if False:
+        kmeans = KMeans(n_clusters=num_classes, n_init=1, n_jobs=2, verbose=0)
+
+        print("\nK-means Training ...")
+        # Train
+        try:
+            kmeans.fit(Xpca)
+        except KeyboardInterrupt:
+            pass
+
+        print("\n\nEvaluation ...")
+        # Evaluate the K-Means clustering accuracy
+        y_pred_kmeans = kmeans.predict(Xpca)
+        
+        acc = evaluation(Ytrain, y_pred_kmeans)
+        print("Accuracy K-means PCA: %.2f" %acc) # 0.53
+
+    
+    
+    #clf = svm.LinearSVC()
+    clf = svm.SVC(gamma='scale')
+     
+    clf.fit(Xpca,Ytrain)
+    
+    Xtestpca = pca.fit_transform(Xtest)
+    ysvm = clf.predict(Xtestpca)
+    
+    rep = classification_report(Ytest, ysvm)
+    print(rep)
+    
+    sys.exit(0)
+    
     
     doplainkmeans = False
 
