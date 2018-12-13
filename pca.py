@@ -3,6 +3,7 @@
 import sys, os, datetime
 import numpy as np
 import argparse
+import timeit
 
 from sklearn.cluster import KMeans
 from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score, classification_report
@@ -44,40 +45,6 @@ def load_data():
     print("Number of classes: %d" %num_classes)
     
     return [Xtrain,Ytrain,Xtest,Ytest,input_shape,num_classes]
-
-
-    
-def AutoEncoder(dims, act='relu', init='glorot_uniform'):
-    
-    print('\nAutoencoder')
-        
-    n_stacks = len(dims) - 1
-    # input
-    input_img = Input(shape=(dims[0],), name='input')
-    x = input_img
-    # internal layers in encoder
-    for i in range(n_stacks-1):
-        x = Dense(dims[i + 1], activation=act, kernel_initializer=init, name='encoder_%d' % i)(x)
-        # hidden layer
-    encoded = Dense(dims[-1], kernel_initializer=init, name='encoder_%d' % (n_stacks - 1))(x)  # hidden layer, features are extracted from here
-    
-    x = encoded
-    # internal layers in decoder\n",
-    for i in range(n_stacks-1, 0, -1):
-        x = Dense(dims[i], activation=act, kernel_initializer=init, name='decoder_%d' % i)(x)
-    
-    # output\n",
-    x = Dense(dims[0], kernel_initializer=init, name='decoder_0')(x)
-    decoded = x
-
-    model_ae = Model(inputs=input_img, outputs=decoded, name='AE')
-    model_ae.compile(optimizer='adam', loss='mse')
-        
-    return model_ae #, model_enc
-
-
-#nmi = normalized_mutual_info_score
-#ari = adjusted_rand_score
 
 
 def evaluation(y_true, y_pred):
@@ -124,18 +91,7 @@ def loadmodel(problem):
         model = None
     return model
 
-def loadskmodel(problem):
-    if problem.endswith('.pkl'):
-        filename = problem
-    else:
-        filename = os.path.join(models_dir, '%s.pkl' %problem)
-    try:
-        kmeans = joblib.load(filename)
-        print("\nModel loaded successfully from file %s\n" %filename)
-    except OSError:    
-        print("\nModel file %s not found!!!\n" %filename)
-        model = None
-    return model
+
 
 def savepcamodel(pca, filename):
     np.savez(filename, pcamean = pca.mean_, pcacomponents = pca.components_)
@@ -178,20 +134,27 @@ if __name__ == "__main__":
     print("\nRandom seed %d" %rs)
     
     # PCA model
-    n_components=100
-    pca = IncrementalPCA(n_components=n_components)
+    n_components=784
+    pca = PCA(n_components=n_components)
+    #pca = IncrementalPCA(n_components=n_components)
 
     print("\nPCA with %d components ..." %n_components)
     filename = os.path.join(models_dir, 'mnist_%03d.pca' %n_components)
 
     if not loadpcamodel(pca,filename):
         print("\nPCA Training ...")
+        t0 =  timeit.default_timer()
         pca.fit(Xtrain)
+        t1 =  timeit.default_timer()
+        print('   time: %.2f s' %(t1-t0))
         savepcamodel(pca, filename)
     
-    print("\nPCA Tranform ...")
+    print('\nPCA Tranform ...')
+    t0 =  timeit.default_timer()
     Xpca = pca.transform(Xtrain)
-
+    t1 =  timeit.default_timer()
+    print('   time: %.2f s' %(t1-t0))
+    
     if False:
         # equivalent to  pca.transform(Xtrain)
         from sklearn.utils.extmath import fast_dot
@@ -225,17 +188,23 @@ if __name__ == "__main__":
         
         #clf = svm.LinearSVC()
         clf = svm.SVC(gamma='scale')
-         
-        clf.fit(Xpca,Ytrain)
         
+        t0 =  timeit.default_timer()
+        clf.fit(Xpca,Ytrain)
+        t1 =  timeit.default_timer()
+        print('   time: %.2f s' %(t1-t0))
+            
         Xtestpca = pca.transform(Xtest)
         ysvm = clf.predict(Xtestpca)
        
+        print("\n\nEvaluation ...")
         rep = classification_report(Ytest, ysvm)
         print(rep)  
-        # RBF 10 comp. f1 0.94, 50 components: f1 0.98, 100 comp. 0.98
+        # RBF 10 comp. f1 0.94, 50 components: f1 0.98, 100 comp. 0.98 74.77 s
         # Linear 10 comp. f1 0.77, 50 components: f1  0.90  , 100 comp. 0.91
-
+        # RBF 784 comp  0.97 448.12 s
+        # RBF no PCA  0.96 457.85 s
+        
     sys.exit(0)
     
     
