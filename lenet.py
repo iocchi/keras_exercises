@@ -1,11 +1,14 @@
 import sys, os, datetime
 import numpy as np
 import argparse
+import timeit
 
 import keras
 from keras import models, layers, backend
 from keras.layers import Dense, Activation, Dropout, Flatten,\
     Conv2D, MaxPooling2D, AveragePooling2D
+
+from sklearn.metrics import classification_report, accuracy_score, f1_score
 
 models_dir = 'models'
 
@@ -34,7 +37,7 @@ def load_data():
     
     # Transform output to one-out-of-n encoding
     Ytrain = keras.utils.to_categorical(Ytrain, num_classes)
-    Ytest = keras.utils.to_categorical(Ytest, num_classes)
+    #Ytest = keras.utils.to_categorical(Ytest, num_classes) # not needed for sklearn metrics
     
     return [Xtrain,Ytrain,Xtest,Ytest,input_shape,num_classes]
 
@@ -121,23 +124,32 @@ if __name__ == "__main__":
     
     print("\nRandom seed %d" %rs)
     
-    print("\nTraining ...")
+    print("\nTraining LeNet ...")
+    t0 =  timeit.default_timer()
     
-     # Train
+    # Train
     try:
-        model.fit(Xtrain, Ytrain, batch_size=32, epochs=100)
+        model.fit(Xtrain, Ytrain, batch_size=32, epochs=10)
     except KeyboardInterrupt:
         pass
+
+    t1 =  timeit.default_timer()
+    print('   time: %.2f s' %(t1-t0))
+
+    # Save the model
+    savemodel(model,problem)
 
     print("\n\nEvaluation ...")
 
     try:
-        score = model.evaluate(Xtest, Ytest)
-        print("Test loss: %f" %score[0])
-        print("Test accuracy: %f" %score[1])
+        ylenet = model.predict_classes(Xtest)        
+        rep = classification_report(Ytest, ylenet)
+        print(rep)
+        acc = accuracy_score(Ytest, ylenet) 
+        print("\n\nAccuracy = %.3f" %acc)
+        acc = f1_score(Ytest, ylenet, average='weighted') 
+        print("\n\nf1-score = %.3f" %acc)
     except KeyboardInterrupt:
         pass
 
-    # Save the model
-    savemodel(model,problem)
 

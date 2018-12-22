@@ -6,7 +6,7 @@ import argparse
 import timeit
 
 from sklearn.cluster import KMeans
-from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score, classification_report
+from sklearn.metrics import classification_report, accuracy_score, f1_score
 from sklearn.externals import joblib
 from sklearn.decomposition import PCA, IncrementalPCA
 from sklearn import svm
@@ -38,6 +38,7 @@ def load_data():
     # normalize input to [0,1]
     Xtrain = Xtrain / 255.0
     Xtest = Xtest / 255.0
+    Ytrain = np.array(Ytrain, dtype=float)
 
     print("Training input %s" %str(Xtrain.shape))
     print("Training output %s" %str(Ytrain.shape))
@@ -134,7 +135,7 @@ if __name__ == "__main__":
     print("\nRandom seed %d" %rs)
     
     # PCA model
-    n_components=784
+    n_components=200
     pca = PCA(n_components=n_components)
     #pca = IncrementalPCA(n_components=n_components)
 
@@ -187,19 +188,31 @@ if __name__ == "__main__":
         print('\nSVM training ...')
         
         #clf = svm.LinearSVC()
+
         clf = svm.SVC(gamma='scale')
         
+        #clf = svm.SVC() # for sklearn 0.19.*
+
         t0 =  timeit.default_timer()
         clf.fit(Xpca,Ytrain)
         t1 =  timeit.default_timer()
         print('   time: %.2f s' %(t1-t0))
-            
+        
         Xtestpca = pca.transform(Xtest)
+
+        print('\nSVM predict ...')
         ysvm = clf.predict(Xtestpca)
        
         print("\n\nEvaluation ...")
         rep = classification_report(Ytest, ysvm)
-        print(rep)  
+        print(rep)
+
+        acc = accuracy_score(Ytest, ysvm) 
+        print("\n\nAccuracy = %.3f" %acc)
+        acc = f1_score(Ytest, ysvm, average='weighted') 
+        print("\n\nf1-score = %.3f" %acc)
+
+          
         # RBF 10 comp. f1 0.94, 50 components: f1 0.98, 100 comp. 0.98 74.77 s
         # Linear 10 comp. f1 0.77, 50 components: f1  0.90  , 100 comp. 0.91
         # RBF 784 comp  0.97 448.12 s
