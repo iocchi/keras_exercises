@@ -1,4 +1,6 @@
-*.h5
 __pycache__
 17flowers
+models/*.npz
+models/*.h5
+
 
